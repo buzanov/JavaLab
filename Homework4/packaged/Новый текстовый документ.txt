@@ -1,0 +1,7 @@
+millercameron39@yahoo.com:Milkman34
+
+MAC address: 70:C9:4E:75:D7:05
+
+Первое приложение (сервер): java -jar homework4-2.0-Server.jar --port=6000 --db-properties-path=resources\db.properties
+
+Второе приложение (клиент): java -jar homework4-2.0-Client.jar --server-ip=127.0.0.1 --server-port=6000
