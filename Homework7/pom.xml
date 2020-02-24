@@ -4,17 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ru.itis</groupId>
+    <groupId>ru.javalab</groupId>
     <artifactId>homework7</artifactId>
     <version>1.0</version>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.reflections/reflections -->
-        <dependency>
-            <groupId>ru.itis</groupId>
-            <artifactId>context</artifactId>
-            <version>1.0</version>
-        </dependency>
         <!--https://mvnrepository.com/artifact/commons-codec/commons-codec-->
         <dependency>
             <groupId>commons-codec</groupId>
