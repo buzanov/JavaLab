@@ -2,7 +2,6 @@ package ru.javalab.homework7.services;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import ru.javalab.context.Component;
 import ru.javalab.homework7.models.Message;
 import ru.javalab.homework7.models.Product;
 import ru.javalab.homework7.models.User;
@@ -18,17 +17,17 @@ import ru.javalab.homework7.repositories.UserRepositoryImpl;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-public class LogicService implements Component {
-    RoleRepositoryImpl roleRepository;
-    ProductRepositoryImpl productRepository;
-    JsonPackageService jsonPackageService;
-    MessageRepositoryImpl messageRepository;
-    UserRepositoryImpl userRepository;
-    JsonResolveService resolveService;
-    AuthService authService;
+public class LogicService {
+    private RoleRepositoryImpl roleRepository = new RoleRepositoryImpl();
+    private ProductRepositoryImpl productRepository = new ProductRepositoryImpl();
+    private JsonPackageService jsonPackageService = new JsonPackageService();
+    private MessageRepositoryImpl messageRepository = new MessageRepositoryImpl();
+    private UserRepositoryImpl userRepository = new UserRepositoryImpl();
+    private JsonResolveService resolveService = new JsonResolveService();
+    private AuthService authService = new AuthService();
 
 
-    private Response addProduct(User user, JsonMessage message) {
+    public Response addProduct(User user, JsonMessage message) {
         if (roleRepository.getPermissionByUserId(user.getId())) {
             LinkedHashMap payload = (LinkedHashMap) message.getPayload();
             LinkedHashMap addProduct = (LinkedHashMap) payload.get("information");
@@ -40,18 +39,18 @@ public class LogicService implements Component {
         }
     }
 
-    private Response getMyProducts(User user) {
+    public Response getMyProducts(User user) {
         List<Product> products = productRepository.getAllProductsByUser(user);
         return Response.build(products, Response.ResponseHeader.LIST);
     }
 
-    private Response getAllProducts() {
+    public Response getAllProducts() {
         List<Product> products = productRepository.getAllProducts();
         return Response.build(products, Response.ResponseHeader.LIST);
     }
 
 
-    private Response deleteProduct(User user, JsonMessage message) {
+    public Response deleteProduct(User user, JsonMessage message) {
         if (user != null) {
             if (roleRepository.getPermissionByUserId(user.getId())) {
                 LinkedHashMap payload = (LinkedHashMap) message.getPayload();
@@ -65,18 +64,18 @@ public class LogicService implements Component {
         }
     }
 
-    private Response buyProduct(User user, JsonMessage message) {
+    public Response buyProduct(User user, JsonMessage message) {
         LinkedHashMap payload = (LinkedHashMap) message.getPayload();
         Product product = productRepository.getProductById((int) payload.get("id"));
         if (product != null) {
             productRepository.addOrder(user, product);
-            return Response.build(jsonPackageService.SUCCESS_YOU_SUCCESSFULLY_BOUGHT_PRODUCT, Response.ResponseHeader.NOTIFICATION)
+            return Response.build(jsonPackageService.SUCCESS_YOU_SUCCESSFULLY_BOUGHT_PRODUCT, Response.ResponseHeader.NOTIFICATION);
         } else {
             return Response.build(jsonPackageService.ERROR_THIS_PRODUCT_DOEST_EXIST, Response.ResponseHeader.ERROR);
         }
     }
 
-    private JsonMessage getMessages(JsonMessage message) {
+    public JsonMessage getMessages(JsonMessage message) {
         JsonMessage response = new JsonMessage();
         LinkedHashMap command = (LinkedHashMap) message.getPayload();
         LinkedHashMap getMessages = (LinkedHashMap) command.get("information");
@@ -92,7 +91,7 @@ public class LogicService implements Component {
         return response;
     }
 
-    private Response registerLogic(Request message) {
+    public Response registerLogic(Request message) {
         JsonResolveService resolveService = new JsonResolveService();
         User user = resolveService.getUserFromMessage(message);
         User dbUser = registration(user);
@@ -112,11 +111,11 @@ public class LogicService implements Component {
         }
     }
 
-    private void writeInDB(Message message) {
+    public void writeInDB(Message message) {
         messageRepository.add(message);
     }
 
-    private String buildMessage(Message message) {
+    public String buildMessage(Message message) {
         StringBuilder builder = new StringBuilder();
         builder.append(message.getDate()).append(" ")
                 .append(message.getTime()).append(" ")
@@ -125,7 +124,7 @@ public class LogicService implements Component {
         return builder.toString();
     }
 
-    private User authorization(User user) {
+    public User authorization(User user) {
         User dbUser = userRepository.getUserByLogin(user);
         PasswordEncoder encoder = new BCryptPasswordEncoder();
         if (encoder.matches(user.getPassword(), dbUser.getPassword())) {
@@ -134,7 +133,7 @@ public class LogicService implements Component {
         return null;
     }
 
-    private Response loginLogic(Request request) {
+    public Response loginLogic(Request request) {
         JsonResolveService resolveService = new JsonResolveService();
         User user = resolveService.getUserFromMessage(request);
         User dbUser = authorization(user);
@@ -146,7 +145,7 @@ public class LogicService implements Component {
 
     }
 
-    private User registration(User user) {
+    public User registration(User user) {
         PasswordEncoder encoder = new BCryptPasswordEncoder();
         user = new User(user.getLogin(), encoder.encode(user.getPassword()));
         User dbUser;
@@ -157,7 +156,6 @@ public class LogicService implements Component {
         }
     }
 
-    @Override
     public String getName() {
         return getClass().getName();
     }

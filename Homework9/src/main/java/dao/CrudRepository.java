@@ -3,7 +3,7 @@ package dao;
 import java.util.Optional;
 
 public interface CrudRepository<T, ID> {
-    void create(T model);
+    T create(T model);
 
     Optional<T> read(ID id);
 

@@ -1,7 +1,6 @@
 package ru.javalab.homework7.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ru.javalab.context.Component;
 import ru.javalab.homework7.dispatcher.RequestDispatcher;
 import ru.javalab.homework7.models.User;
 import ru.javalab.homework7.protocol.Request;
@@ -17,7 +16,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultiClientServer implements Component {
+public class MultiClientServer {
     private List<ClientHandler> clients = new ArrayList<>();
 
     public MultiClientServer() {
@@ -42,7 +41,6 @@ public class MultiClientServer implements Component {
         }
     }
 
-    @Override
     public String getName() {
         return this.getClass().getName();
     }

@@ -1,23 +1,37 @@
 package ru.javalab.homework7.repositories;
 
-import ru.javalab.context.Component;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.javalab.homework7.models.Product;
 import ru.javalab.homework7.models.User;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-public class ProductRepositoryImpl implements CrudRepository<Product>, Component {
+public class ProductRepositoryImpl implements CrudRepository<Product> {
     private static Connection connection = new DBConnection().getConnection();
+    private JdbcTemplate template;
+    Map<Integer, Product> map = new HashMap<>();
 
-    RowMapper<Product> mapper = rs -> {
+    public static final String SQL_ADD_PRODUCT = "INSERT INTO product (name, price) VALUES (?,?)";
+    public static final String SQL_FIND_ALL = "SELECT * FROM product";
+    public static final String SQL_FIND_BY_NAME = "SELECT * FROM product WHERE name = ?";
+    public static final String SQL_FIND_ALL_PRODUCT_BY_USER = "SELECT * FROM product WHERE id = ANY (SELECT product_id FROM product_to_user WHERE user_id = ?)";
+    public static final String SQL_ADD_ORDER = "INSERT INTO product_to_user (user_id, product_id) VALUES (?,?)";
+    public static final String SQL_FIND_BY_ID = "SELECT * FROM product WHERE id = ?";
+    public static final String SQL_DELETE_BY_ID = "DELETE FROM product WHERE id = ?";
+
+    RowMapper<Product> mapper = (rs, i) -> {
         try {
-            return new Product(rs.getInt("id"), rs.getInt("price"), rs.getString("name"));
+            Integer id = rs.getInt("id");
+            map.put(id, new Product(id, rs.getInt("price"), rs.getString("name")));
+            return map.get(id);
         } catch (SQLException e) {
             throw new IllegalArgumentException(e);
         }
@@ -25,91 +39,37 @@ public class ProductRepositoryImpl implements CrudRepository<Product>, Component
 
     @Override
     public Product add(Product product) {
-        try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO product (name, price) VALUES (?,?)")) {
-            stmt.setString(1, product.getName());
-            stmt.setInt(2, product.getPrice());
-            stmt.executeUpdate();
-            return product;
-        } catch (SQLException e) {
-            throw new IllegalArgumentException(e);
-        }
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        template.update(SQL_ADD_PRODUCT, new Object[]{product.getName(), product.getPrice()}, keyHolder);
+        product.setId(keyHolder.getKey().intValue());
+        return product;
     }
 
     @Override
     public Optional<Product> find(Product product) {
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM product WHERE name = ?")) {
-            stmt.setString(1, product.getName());
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return Optional.ofNullable(mapper.mapRow(rs));
-            }
-        } catch (SQLException e) {
-            throw new IllegalArgumentException(e);
-        }
-        return Optional.empty();
+        return Optional.of(template.queryForObject(SQL_FIND_BY_NAME, mapper, product.getName()));
     }
 
     public Integer getIdByName(Product product) {
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM product WHERE name = ?")) {
-            stmt.setString(1, product.getName());
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next())
-                return rs.getInt(1);
-            else
-                return null;
-        } catch (SQLException e) {
-            throw new IllegalArgumentException(e);
-        }
+        if (find(product).isPresent())
+            return find(product).get().getId();
+        else return null;
     }
 
     public List<Product> getAllProducts() {
-        List<Product> products = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM product")) {
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                products.add(mapper.mapRow(rs));
-            }
-            return products;
-        } catch (SQLException e) {
-            throw new IllegalArgumentException(e);
-        }
+        return template.query(SQL_FIND_ALL, mapper);
     }
 
     public List<Product> getAllProductsByUser(User user) {
-        List<Product> products = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM product WHERE id = ANY (SELECT product_id FROM product_to_user WHERE user_id = ?)")) {
-            stmt.setInt(1, user.getId());
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                products.add(mapper.mapRow(rs));
-            }
-            return products;
-        } catch (SQLException e) {
-            throw new IllegalArgumentException(e);
-        }
+        return template.query(SQL_FIND_ALL_PRODUCT_BY_USER, new Object[]{user.getId()}, mapper);
     }
 
     public void addOrder(User user, Product product) {
-        try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO product_to_user (user_id, product_id) VALUES (?,?)")) {
-            stmt.setInt(1, user.getId());
-            stmt.setInt(2, getIdByName(product));
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        template.update(SQL_ADD_ORDER, user.getId(), product.getId());
     }
 
     public Product getProductById(int id) {
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM product WHERE id = ?")) {
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return mapper.mapRow(rs);
-            }
-            return null;
-        } catch (SQLException e) {
-            throw new IllegalArgumentException(e);
-        }
+        return template.queryForObject(SQL_FIND_BY_ID, new Object[]{id}, mapper);
     }
 
     @Override
@@ -119,17 +79,7 @@ public class ProductRepositoryImpl implements CrudRepository<Product>, Component
 
     @Override
     public boolean delete(Product product) {
-        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM product WHERE id = ?")) {
-            statement.setInt(1, product.getId());
-            statement.executeUpdate();
-            return true;
-        } catch (SQLException e) {
-            return false;
-        }
+        return template.update(SQL_DELETE_BY_ID, product.getId()) == 1;
     }
 
-    @Override
-    public String getName() {
-        return "ProductRepository";
-    }
 }

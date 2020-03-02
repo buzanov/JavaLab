@@ -3,7 +3,6 @@ package ru.javalab.homework7.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Hex;
-import ru.javalab.context.ApplicationContext;
 import ru.javalab.context.ApplicationContextReflectionBased;
 import ru.javalab.context.Component;
 import ru.javalab.homework7.models.User;

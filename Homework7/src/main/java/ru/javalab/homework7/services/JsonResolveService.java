@@ -1,6 +1,5 @@
 package ru.javalab.homework7.services;
 
-import ru.javalab.context.Component;
 import ru.javalab.homework7.models.Message;
 import ru.javalab.homework7.models.User;
 import ru.javalab.homework7.protocol.Request;
@@ -8,7 +7,7 @@ import ru.javalab.homework7.protocol.Request;
 import java.util.Date;
 import java.util.LinkedHashMap;
 
-public class JsonResolveService implements Component {
+public class JsonResolveService {
 
     public User getUserFromToken(String token) {
         User user = null;
@@ -28,8 +27,4 @@ public class JsonResolveService implements Component {
         return new User((String) payload.get("login"), (String) payload.get("password"));
     }
 
-    @Override
-    public String getName() {
-        return getClass().getName();
-    }
 }

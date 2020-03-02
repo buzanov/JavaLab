@@ -1,21 +1,35 @@
 package ru.javalab.homework7.repositories;
 
-import ru.javalab.context.Component;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.javalab.homework7.models.User;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
-public class UserRepositoryImpl implements CrudRepository<User>, Component {
+public class UserRepositoryImpl implements CrudRepository<User> {
     private Connection connection = new DBConnection().getConnection();
+    Map<Integer, User> map = new HashMap<>();
+    JdbcTemplate template;
 
-    private RowMapper<User> mapper = rs -> {
+    public static final String SQL_ADD = "INSERT INTO public.user (login, password) VALUES (?,?) ";
+    public static final String SQL_FIND_BY_ID = "SELECT * FROM public.user WHERE id = ? ";
+    public static final String SQL_FIND_BY_LOGIN = "SELECT * FROM public.user WHERE login = ?";
+    public static final String SQL_FIND_BY_LOGIN_AND_PASSWORD = "SELECT * FROM public.user WHERE login = ? AND password = ?";
+
+
+    private RowMapper<User> mapper = (rs, i) -> {
         try {
-            return new User(rs.getString("login"),
-                    rs.getString("password")).setId(rs.getInt("id"));
+            Integer id = rs.getInt("id");
+            map.put(id, new User(rs.getString("login"), rs.getString("password")).setId(id));
+            return map.get(id);
         } catch (SQLException e) {
             System.out.println("User mapping error");
             throw new IllegalArgumentException(e);
@@ -25,56 +39,16 @@ public class UserRepositoryImpl implements CrudRepository<User>, Component {
 
     @Override
     public User add(User user) {
-        try {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO public.user (login, password) VALUES (?,?) ");
-            statement.setString(1, user.getLogin());
-            statement.setString(2, user.getPassword());
-            statement.executeUpdate();
-            statement = connection.prepareStatement("SELECT * FROM public.user WHERE login = ?");
-            statement.setString(1, user.getLogin());
-            ResultSet rs = statement.executeQuery();
-            if (rs.next()) {
-                return mapper.mapRow(rs);
-            } else
-                return null;
-        } catch (SQLException e) {
-            System.out.println("Error during adding user in db");
-            e.printStackTrace();
-            return null;
-        }
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        template.update(SQL_ADD, new Object[]{user.getLogin(), user.getPassword()}, keyHolder);
+        user.setId(keyHolder.getKey().intValue());
+        return user;
     }
 
-    public String getPasswordByLogin(String login) {
-        try {
-            PreparedStatement stmt = connection.prepareStatement("SELECT password FROM public.user WHERE login = ?");
-            stmt.setString(1, login);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString(1);
-            }
-            return null;
-        } catch (SQLException e) {
-            System.out.println("Error during getting password user");
-            throw new IllegalArgumentException(e);
-        }
-    }
 
     @Override
     public Optional<User> find(User user) {
-        try {
-            PreparedStatement stmt = connection.prepareStatement("SELECT * FROM public.user WHERE login = ? AND password = ?");
-            stmt.setString(1, user.getLogin());
-            stmt.setString(2, user.getPassword());
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return Optional.ofNullable(mapper.mapRow(rs));
-            }
-            return Optional.empty();
-        } catch (SQLException e) {
-            System.out.println("Error during finding user");
-            throw new IllegalArgumentException(e);
-        }
-
+        return Optional.of(template.queryForObject(SQL_FIND_BY_LOGIN_AND_PASSWORD, new Object[]{user.getLogin(), user.getPassword()}, mapper));
     }
 
     public Integer findIdByLogin(String login) {
@@ -95,31 +69,11 @@ public class UserRepositoryImpl implements CrudRepository<User>, Component {
     }
 
     public User getUserById(int id) {
-        try {
-            PreparedStatement stmt = connection.prepareStatement("SELECT * FROM public.user WHERE id = ? ");
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return mapper.mapRow(rs);
-            } else return null;
-        } catch (SQLException e) {
-            throw new IllegalArgumentException(e);
-        }
+        return template.queryForObject(SQL_FIND_BY_ID, new Object[]{id}, mapper);
     }
 
     public User getUserByLogin(User user) {
-        try {
-            PreparedStatement stmt = connection.prepareStatement("SELECT * FROM public.user WHERE login = ?");
-            stmt.setString(1, user.getLogin());
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return mapper.mapRow(rs);
-            } else {
-                return null;
-            }
-        } catch (SQLException e) {
-            throw new IllegalArgumentException(e);
-        }
+        return template.queryForObject(SQL_FIND_BY_ID, new Object[]{user.getLogin()}, mapper);
     }
 
     @Override
@@ -132,8 +86,4 @@ public class UserRepositoryImpl implements CrudRepository<User>, Component {
         return false;
     }
 
-    @Override
-    public String getName() {
-        return "UserRepository";
-    }
 }

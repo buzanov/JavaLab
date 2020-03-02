@@ -3,9 +3,6 @@ package ru.javalab.homework7.server;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import ru.javalab.context.ApplicationContext;
-import ru.javalab.context.ApplicationContextReflectionBased;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,9 +13,6 @@ public class ChatServerStartMain {
                 .addObject(args)
                 .build()
                 .parse(argv);
-        ApplicationContext applicationContext = ApplicationContextReflectionBased.getInstance();
-        MultiClientServer multiClientServer = applicationContext.getComponent(MultiClientServer.class);
-        multiClientServer.start(args.port);
     }
 
     @Parameters(separators = "=")

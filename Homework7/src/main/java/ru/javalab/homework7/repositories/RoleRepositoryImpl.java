@@ -1,13 +1,11 @@
 package ru.javalab.homework7.repositories;
 
-import ru.javalab.context.Component;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class RoleRepositoryImpl implements Component {
+public class RoleRepositoryImpl {
     private Connection connection = new DBConnection().getConnection();
 
     public boolean getPermissionByUserId(int id) {
@@ -23,8 +21,4 @@ public class RoleRepositoryImpl implements Component {
         }
     }
 
-    @Override
-    public String getName() {
-        return "RoleRepository";
-    }
 }

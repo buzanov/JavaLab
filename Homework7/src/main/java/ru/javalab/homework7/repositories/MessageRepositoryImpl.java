@@ -1,8 +1,12 @@
 package ru.javalab.homework7.repositories;
 
-import ru.javalab.context.Component;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.javalab.homework7.models.Message;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,11 +15,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class MessageRepositoryImpl implements CrudRepository<Message>, Component {
+public class MessageRepositoryImpl implements CrudRepository<Message> {
     private Connection connection = new DBConnection().getConnection();
     private UserRepositoryImpl userRepository;
+    private JdbcTemplate template;
 
-    private RowMapper<Message> mapper = rs -> {
+    public MessageRepositoryImpl(DataSource dataSource) {
+        this.template = new JdbcTemplate(dataSource);
+    }
+
+    public static final String SQL_SELECT_PAGINATION = "SELECT * FROM public.comment LIMIT ? OFFSET ?";
+    public static final String SQL_ADD = "INSERT INTO public.comment (user_id, date, time, message_text) VALUES (?,?,?,?)";
+
+    private RowMapper<Message> mapper = (rs, i) -> {
         try {
             return new Message(rs.getString("date"), rs.getString("time"), rs.getString("message_text"), userRepository.getUserById(rs.getInt("user_id")));
         } catch (SQLException e) {
@@ -26,35 +38,15 @@ public class MessageRepositoryImpl implements CrudRepository<Message>, Component
 
 
     public List<Message> getMessages(int size, int page) {
-        try {
-            List<Message> list = new ArrayList<>();
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM public.comment LIMIT ? OFFSET ?");
-            statement.setInt(1, size);
-            statement.setInt(2, size * page);
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()) {
-                list.add(mapper.mapRow(rs));
-            }
-            return list;
-        } catch (SQLException e) {
-            System.out.println("Error during getting messages from db");
-            throw new IllegalArgumentException(e);
-        }
+        return template.query(SQL_SELECT_PAGINATION, new Object[]{size, page}, mapper);
     }
 
     @Override
     public Message add(Message message) {
-        try {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO public.comment (user_id, date, time, message_text) VALUES (?,?,?,?)");
-            statement.setInt(1, message.getUser().getId());
-            statement.setString(2, message.getDate());
-            statement.setString(3, message.getTime());
-            statement.setString(4, message.getMessage());
-            return message;
-        } catch (SQLException e) {
-            System.out.println("Error during adding comment in repository");
-            throw new IllegalArgumentException(e);
-        }
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        template.update(SQL_ADD, new Object[]{message.getUser().getId(), message.getDate(), message.getTime(), message.getMessage()}, keyHolder);
+        message.setId(keyHolder.getKey().intValue());
+        return message;
     }
 
     @Override
@@ -72,8 +64,4 @@ public class MessageRepositoryImpl implements CrudRepository<Message>, Component
         return false;
     }
 
-    @Override
-    public String getName() {
-        return "MessageRepository";
-    }
 }

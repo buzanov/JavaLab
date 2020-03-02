@@ -1,19 +1,20 @@
 package ru.javalab.homework7.dispatcher;
 
-import ru.javalab.context.Component;
 import ru.javalab.homework7.models.User;
 import ru.javalab.homework7.protocol.Request;
 import ru.javalab.homework7.protocol.Response;
+import ru.javalab.homework7.protocol.json.JsonMessage;
 import ru.javalab.homework7.services.JsonPackageService;
 import ru.javalab.homework7.services.JsonResolveService;
 import ru.javalab.homework7.services.LogicService;
 
+import java.sql.ResultSet;
 import java.util.LinkedHashMap;
 
-public class RequestDispatcher implements Component {
-    JsonResolveService jsonResolveService;
-    JsonPackageService jsonPackageService;
-    LogicService logicService;
+public class RequestDispatcher {
+    JsonResolveService jsonResolveService = new JsonResolveService();
+    JsonPackageService jsonPackageService = new JsonPackageService();
+    LogicService logicService = new LogicService();
 
     public Response doDispatch(Request request) {
         User user = jsonResolveService.getUserFromToken(request.getToken());
@@ -33,7 +34,7 @@ public class RequestDispatcher implements Component {
             }
             case ("Register"): {
                 if (user == null) {
-                    response = registerLogic(request);
+                    response = logicService.registerLogic(request);
                 } else {
                     response = jsonPackageService.ERROR_MESSAGE_ALREADY_LOGGED_IN;
                 }
@@ -47,27 +48,27 @@ public class RequestDispatcher implements Component {
                     String command = (String) payload.get("command");
                     switch (command) {
                         case ("GetMessages"): {
-                            response = getMessages(request);
+                            response = logicService.getMessages(request);
                             break;
                         }
                         case ("BuyProduct"): {
-                            response = buyProduct(user, request);
+                            response = logicService.buyProduct(user, request);
                             break;
                         }
                         case ("DeleteProduct"): {
-                            response = deleteProduct(user, request);
+                            response = logicService.deleteProduct(user, request);
                             break;
                         }
                         case ("GetMyProducts"): {
-                            response = getMyProducts(user);
+                            response = logicService.getMyProducts(user);
                             break;
                         }
                         case ("GetAllProducts"): {
-                            response = getAllProducts();
+                            response = logicService.getAllProducts();
                             break;
                         }
                         case ("AddProduct"): {
-                            response = addProduct(user, request);
+                            response = logicService.addProduct(user, request);
                             break;
                         }
 

@@ -3,31 +3,30 @@ package dao;
 import model.Course;
 import model.Lesson;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 public class CourseRepositoryImpl implements CourseRepository {
     private Connection connection;
-    private Map<Integer, Course> map = new HashMap<>();
+    LessonsRepositoryJdbcImpl lessonsRepositoryJdbc;
+
+    private Map<Long, Course> map = new HashMap<>();
 
     private static final String SQL_UPDATE = "UPDATE project.course as c SET c.name = ? WHERE c.id = ?";
     private static final String SQL_DELETE = "DELETE FROM project.course WHERE id = ?";
     private static final String SQL_FIND_BY_ID = "SELECT c.id, c.name as course_name, l.name as lesson_name FROM project.course as c LEFT JOIN project.lesson l on l.course_id = c.id WHERE c.id = ?";
     private static final String SQL_FIND_BY_ALL = "SELECT c.id, c.name as course_name, l.name as lesson_name FROM project.course as c LEFT JOIN project.lesson l on l.course_id = c.id";
-    private static final String SQL_ADD_COURSE = "INSERT INTO project.course(name) VALUES (?) RETURNING id";
-    private static final String SQL_ADD_LESSON = "INSERT INTO project.lesson(name, course_id) VALUES (?,?)";
+    private static final String SQL_ADD_COURSE = "INSERT INTO project.course(name) VALUES (?)";
 
 
     public CourseRepositoryImpl() {
         this.connection = DBConnector.getInstance().getConnection();
+        lessonsRepositoryJdbc = new LessonsRepositoryJdbcImpl(connection);
     }
 
     public RowMapper<Course> mapRow = row -> {
         try {
-            int id = row.getInt("id");
+            Long id = row.getLong("id");
             Course course;
             if (!map.containsKey(id)) {
                 course = new Course();
@@ -45,20 +44,21 @@ public class CourseRepositoryImpl implements CourseRepository {
     };
 
 
-    public void create(Course model) {
-        try (PreparedStatement stmt = connection.prepareStatement(SQL_ADD_COURSE)) {
+    public Course create(Course model) {
+        try (PreparedStatement stmt = connection.prepareStatement(SQL_ADD_COURSE, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, model.getName());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                int id = rs.getInt("id");
-                //Лучше приготовить statement и несколько раз выполгить или открывать и закрывать по очереди?
                 for (Lesson lesson : model.getLessonList()) {
-                    try (PreparedStatement statement = connection.prepareStatement(SQL_ADD_LESSON)) {
-                        statement.setString(1, lesson.getName());
-                        statement.setInt(2, id);
-                        statement.executeUpdate();
-                    }
+                    lessonsRepositoryJdbc.create(lesson);
                 }
+            }
+            ResultSet generatedKeys = stmt.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                model.setId(generatedKeys.getLong(1));
+                return model;
+            } else {
+                throw new SQLException("Crating lesson failed");
             }
         } catch (SQLException e) {
             throw new IllegalArgumentException(e);

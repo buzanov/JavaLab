@@ -1,11 +1,27 @@
 package model;
 
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class Lesson {
+    Long id;
     String name;
     Course course;
 
     public String getName() {
         return name;
+    }
+
+    public Lesson(String name, Course course) {
+        this.name = name;
+        this.course = course;
     }
 
     @Override
@@ -28,9 +44,4 @@ public class Lesson {
         this.course = course;
     }
 
-    public Lesson(String name, Course course) {
-        this.name = name;
-        this.course = course;
-        //this.course.getLessonList().add(this);
-    }
 }
