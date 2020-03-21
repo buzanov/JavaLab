@@ -71,7 +71,7 @@ public class CourseRepositoryTemplateIImpl implements CourseRepository {
         template.update(SQL_UPDATE, model.getName(), model.getId());
     }
 
-    public void delete(Long id) {
+    public void delete(Long id)  {
         template.update(SQL_DELETE, id);
     }
 
