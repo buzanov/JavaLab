@@ -1,20 +1,20 @@
 package ru.itis.servlets.models;
 
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
-/**
- * 01.12.2017
- * FileInfo
- *
- * @author Sidikov Marsel (First Software Engineering Platform)
- * @version v1.0
- */
+import javax.persistence.*;
+import java.util.Objects;
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder()
+@Builder
+@Entity
 public class FileInfo {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     // название файла в хранилище
     private String storageFileName;
@@ -26,4 +26,23 @@ public class FileInfo {
     private String type;
     // по какому URL можно получить файл
     private String url;
+    //расширение
+    private String extension;
+
+    public static FileInfo getInstance(MultipartFile multipartFile) {
+        String extension = Objects.requireNonNull(multipartFile.getOriginalFilename()).substring(multipartFile.getOriginalFilename().lastIndexOf('.'));
+        String storageName = UUID.randomUUID().toString() + extension;
+        String originalName = multipartFile.getOriginalFilename();
+        String url = "localhost/files/" + storageName;
+        String type = multipartFile.getContentType();
+        Long size = multipartFile.getSize();
+        return FileInfo.builder()
+                .storageFileName(storageName)
+                .size(size)
+                .originalFileName(originalName)
+                .extension(extension)
+                .url(url)
+                .type(type)
+                .build();
+    }
 }

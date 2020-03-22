@@ -10,6 +10,7 @@
 <body>
 <div>
     <form action="/upload_file" method="post" enctype="multipart/form-data">
+        <input type="text" name="email" placeholder="Email">
         <input type="file" name="file" placeholder="Имя файла..."/>
         <input type="submit" value="Send">
     </form>

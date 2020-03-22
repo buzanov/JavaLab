@@ -1,10 +1,7 @@
 package ru.itis.servlets.services;
 
-import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
+import ru.itis.servlets.models.FileInfo;
 
 public interface FileSaver {
-    void save(MultipartFile file);
+    void save(byte[] bytes, FileInfo file, String email);
 }
