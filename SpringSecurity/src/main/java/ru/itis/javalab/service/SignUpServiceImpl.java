@@ -12,6 +12,7 @@ public class SignUpServiceImpl implements SignUpService {
 
     @Override
     public void signUp(User user) {
+        //todo confirmation
         userRepository.save(user);
     }
 }

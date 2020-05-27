@@ -18,10 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.ViewResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
-
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
@@ -129,6 +127,8 @@ public class ApplicationContextConfig {
         properties.put("hibernate.allow_update_outside_transaction", "true");
         return properties;
     }
+
+
 
 
 }

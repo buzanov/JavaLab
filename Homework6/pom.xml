@@ -67,7 +67,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        ru.javalab.ru.javalab.homework6.client.ChatClientMain
+                                        Window
                                     </mainClass>
                                 </manifest>
                             </archive>

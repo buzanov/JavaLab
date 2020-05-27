@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
@@ -13,12 +14,9 @@ import org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.orm.jpa.EntityManagerFactoryInfo;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
@@ -32,12 +30,12 @@ import java.util.Objects;
 import java.util.Properties;
 
 
-@Component
+@Configuration
+//@EnableAspectJAutoProxy
 @PropertySource("classpath:application.properties")
 @ComponentScan(basePackages = "ru.itis.servlets")
 @EnableJpaRepositories(basePackages = "ru.itis.servlets.repositories")
 @EnableTransactionManagement
-@EnableAspectJAutoProxy
 public class ApplicationContextConfig {
 
     @Autowired
